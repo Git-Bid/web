@@ -1,6 +1,6 @@
 <script>
     import { onMount } from "svelte";
-
+    let amount = 2000;
     // Create an instance of the Stripe object with your publishable API key
     let stripe;
     onMount(() => {
@@ -9,23 +9,25 @@
         );
     });
     function checkout() {
-        fetch("http://localhost:8080/create/bounty", {
+        fetch("http://api.gitbid.io/create/bounty", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                amount: 3000,
+                amount: amount,
                 issue_id: 42,
             }),
         })
             .then(function (response) {
+                console.log("RESPONSE", response)
                 return response.json();
             })
             .then(function (session) {
                 return stripe.redirectToCheckout({ sessionId: session.id });
             })
             .then(function (result) {
+                console.log("RESULT", result)
                 // If redirectToCheckout fails due to a browser or network
                 // error, you should display the localized error message to your
                 // customer using error.message.
@@ -34,7 +36,7 @@
                 }
             })
             .catch(function (error) {
-                console.error("Error:", error);
+                console.error("API Error:", error);
             });
     }
 </script>
@@ -46,7 +48,7 @@
             alt="The cover of Stubborn Attachments" />
         <div class="description">
             <h3>Stubborn Attachments</h3>
-            <h5>$20.00</h5>
+            <input bind:value={amount}/>
         </div>
     </div>
     <button on:click={checkout}>Checkout</button>
