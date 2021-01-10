@@ -1,70 +1,53 @@
-<script lang='typescript'>
-	import {onMount} from 'svelte';
-	let count: number = 0;
-	onMount(() => {
-	  const interval = setInterval(() => count++, 1000);
-	  return () => {
-		clearInterval(interval);
-	  };
-	});
-  </script>
-  
-  <style>
-	:global(body) {
-	  margin: 0;
-	  font-family: Arial, Helvetica, sans-serif;
-	}
-	.App {
-	  text-align: center;
-	}
-	.App code {
-	  background: #0002;
-	  padding: 4px 8px;
-	  border-radius: 4px;
-	}
-	.App p {
-	  margin: 0.4rem;
-	}
-  
-	.App-header {
-	  background-color: #f9f6f6;
-	  color: #333;
-	  min-height: 100vh;
-	  display: flex;
-	  flex-direction: column;
-	  align-items: center;
-	  justify-content: center;
-	  font-size: calc(10px + 2vmin);
-	}
-	.App-link {
-	  color: #ff3e00;
-	}
-	.App-logo {
-	  height: 36vmin;
-	  pointer-events: none;
-	  margin-bottom: 3rem;
-	  animation: App-logo-spin infinite 1.6s ease-in-out alternate;
-	}
-	@keyframes App-logo-spin {
-	  from {
-		transform: scale(1);
-	  }
-	  to {
-		transform: scale(1.06);
-	  }
-	}
-  </style>
-  
-  <div class="App">
-	<header class="App-header">
-	  <img src="/logo.svg" class="App-logo" alt="logo" />
-	  <p>Edit <code>src/App.svelte</code> and save to reload.</p>
-	  <p>Page has been open for <code>{count}</code> seconds.</p>
-	  <p>
-		<a class="App-link" href="https://svelte.dev" target="_blank" rel="noopener noreferrer">
-		  Learn Svelte
-		</a>
-	  </p>
-	</header>
-  </div>
-  
+<script>
+    import { onMount } from "svelte";
+
+    // Create an instance of the Stripe object with your publishable API key
+    let stripe;
+    onMount(() => {
+        stripe = Stripe(
+            "pk_test_51I7ulLHX1rk5bSX1NWKzYasE7DIcdINuZNebzwx6ywnMypYfnlVLR0pVg6MuTc8I3GuMmY4Fcymhhqhw2pcO3w8g00yko2X1T2"
+        );
+    });
+    function checkout() {
+        fetch("http://localhost:8080/create/bounty", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                amount: 3000,
+                issue_id: 42,
+            }),
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (session) {
+                return stripe.redirectToCheckout({ sessionId: session.id });
+            })
+            .then(function (result) {
+                // If redirectToCheckout fails due to a browser or network
+                // error, you should display the localized error message to your
+                // customer using error.message.
+                if (result.error) {
+                    alert(result.error.message);
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error);
+            });
+    }
+</script>
+
+<section>
+    <div class="product">
+        <img
+            src="https://i.imgur.com/EHyR2nP.png"
+            alt="The cover of Stubborn Attachments" />
+        <div class="description">
+            <h3>Stubborn Attachments</h3>
+            <h5>$20.00</h5>
+        </div>
+    </div>
+    <button on:click={checkout}>Checkout</button>
+</section>
